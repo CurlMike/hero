@@ -11,7 +11,8 @@ import java.io.IOException;
 
 public class Game {
     private Screen screen;
-    Hero hero = new Hero(10, 10);
+    private Arena arena;
+
     public Game() {
         try {
             TerminalSize terminalSize = new TerminalSize(40, 20);
@@ -25,35 +26,51 @@ public class Game {
         catch (IOException e) {
             e.printStackTrace();
         }
+        arena = new Arena(40, 20);
     }
+
     private void ProcessKey(KeyStroke key) throws IOException {
         if (key.getKeyType() == KeyType.ArrowUp) {
-            hero.MoveUp();
+            arena.moveHero(arena.MoveUp());
         }
         if (key.getKeyType() == KeyType.ArrowDown) {
-            hero.MoveDown();
+            arena.moveHero(arena.MoveDown());
         }
         if (key.getKeyType() == KeyType.ArrowLeft) {
-            hero.MoveLeft();
+            arena.moveHero(arena.MoveLeft());
         }
         if (key.getKeyType() == KeyType.ArrowRight) {
-            hero.MoveRight();
-        }
-        if (key.getKeyType() == KeyType.Character && key.getCharacter() == 'q') {
-            screen.close();
+            arena.moveHero(arena.MoveRight());
         }
     }
     private void draw() throws IOException {
         screen.clear();
-        hero.draw(screen);
+        arena.draw(screen.newTextGraphics());
         screen.refresh();
     }
-    public void run() throws IOException {
+    public void run() {
+        try {
         while (true) {
             draw();
             com.googlecode.lanterna.input.KeyStroke key = screen.readInput();
             ProcessKey(key);
-            if (key.getKeyType() == KeyType.EOF) break;
+            if (arena.verifyMonsterCollisions()) {
+                screen.close();
+                break;
+            }
+            arena.moveMonsters();
+            if(arena.verifyMonsterCollisions()){
+                screen.close();
+                break;
+            }
+
+            if (key.getKeyType() == KeyType.Character && key.getCharacter() == ('q'))
+                screen.close();
+            if (key.getKeyType() == KeyType.EOF)
+                break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
